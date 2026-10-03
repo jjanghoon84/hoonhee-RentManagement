@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="description" content="스마트빌·형제그린빌라 임대 관리 웹앱">
+  <title>임대관리</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- 설정 안내 화면 (firebase-config.js가 비어 있을 때) -->
+  <div id="setupView" class="view" hidden>
+    <main class="wrap narrow">
+      <div class="setup-card">
+        <h1>🏠 임대관리</h1>
+        <p class="sub">아직 Firebase 연결 설정이 되어 있지 않아요.<br>아래 순서대로 설정해 주세요.</p>
+        <ol>
+          <li><a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase 콘솔</a>에서 새 프로젝트를 만드세요. (무료 Spark 요금제로 충분해요)</li>
+          <li><strong>Authentication → 로그인 방법</strong>에서 <strong>이메일/비밀번호</strong>를 사용 설정하세요.</li>
+          <li><strong>Authentication → 사용자</strong> 탭에서 함께 쓸 계정 2개를 추가하세요.</li>
+          <li><strong>Firestore Database</strong>를 만들고(프로덕션 모드), 규칙 탭에 <code>firestore.rules</code> 내용을 붙여넣고 게시하세요.</li>
+          <li><strong>프로젝트 설정 → 내 앱 → 웹 앱(&lt;/&gt;)</strong> 추가 후 나오는 <code>firebaseConfig</code> 값을 복사하세요.</li>
+          <li>복사한 값을 <code>firebase-config.js</code>에 붙여넣고 GitHub에 올리세요.</li>
+        </ol>
+        <p class="hint">자세한 단계별 방법은 저장소의 <strong>설치가이드.md</strong>를 참고하세요.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- 로그인 화면 -->
+  <div id="loginView" class="view" hidden>
+    <main class="wrap narrow">
+      <div class="login-card">
+        <h1>🏠 임대관리</h1>
+        <p class="sub">스마트빌 · 형제그린빌라</p>
+        <form id="loginForm">
+          <label class="field">이메일
+            <input type="email" id="email" required autocomplete="username" placeholder="example@email.com">
+          </label>
+          <label class="field">비밀번호
+            <input type="password" id="password" required autocomplete="current-password" placeholder="비밀번호">
+          </label>
+          <button type="submit" class="btn primary big" id="loginBtn">로그인</button>
+        </form>
+        <p id="loginError" class="error" hidden></p>
+        <p class="hint">계정은 Firebase 콘솔에서 미리 만들어 주세요.<br>이 화면에서는 회원가입을 할 수 없어요.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- 앱 화면 -->
+  <div id="appView" class="view" hidden>
+    <header class="topbar">
+      <div class="title-block">
+        <h1 id="pageTitle">임대관리</h1>
+        <p class="user-line" id="userLine"></p>
+      </div>
+      <button id="logoutBtn" class="btn">로그아웃</button>
+    </header>
+
+    <nav class="building-tabs" aria-label="건물 전환">
+      <button class="building-tab active" type="button" data-building="스마트빌">
+        <span>스마트빌</span><small id="countSmartville"></small>
+      </button>
+      <button class="building-tab" type="button" data-building="형제그린빌라">
+        <span>형제그린빌라</span><small id="countVilla"></small>
+      </button>
+    </nav>
+
+    <main class="wrap">
+      <section class="monthbar" aria-label="월 이동">
+        <button id="prevMonth" class="btn" type="button" aria-label="이전 달">◀</button>
+        <h2 id="monthLabel"></h2>
+        <button id="nextMonth" class="btn" type="button" aria-label="다음 달">▶</button>
+        <button id="todayBtn" class="btn" type="button">이번 달</button>
+      </section>
+
+      <section class="dashboard" aria-label="수납 현황">
+        <div class="stat"><span class="stat-label">예상 수납</span><span class="stat-value" id="statExpected">-</span></div>
+        <div class="stat"><span class="stat-label">수납 완료</span><span class="stat-value green" id="statCollected">-</span></div>
+        <div class="stat"><span class="stat-label">수납률</span><span class="stat-value" id="statRate">-</span></div>
+      </section>
+
+      <section class="alerts">
+        <div class="alert-card red">
+          <h3>🔴 미납 호실 <span id="unpaidCount"></span></h3>
+          <ul id="unpaidList"></ul>
+        </div>
+        <div class="alert-card amber">
+          <h3>🟡 만기 90일 이내</h3>
+          <ul id="expiryList"></ul>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <input type="search" id="searchInput" placeholder="호실 · 입주자 · 전화번호 검색" aria-label="검색">
+        <div class="filters" id="filters" role="group" aria-label="필터">
+          <button class="chip active" type="button" data-filter="all">전체</button>
+          <button class="chip" type="button" data-filter="unpaid">미납</button>
+          <button class="chip" type="button" data-filter="paid">완납</button>
+          <button class="chip" type="button" data-filter="expiry">만기임박</button>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <button id="addBtn" class="btn primary big" type="button">＋ 임대차 등록</button>
+      </section>
+      <section class="toolbar">
+        <button id="importBtn" class="btn" type="button">↑ 데이터 불러오기</button>
+        <button id="backupBtn" class="btn" type="button">↓ JSON 백업</button>
+        <button id="csvBtn" class="btn" type="button">CSV 내보내기</button>
+        <input type="file" id="fileInput" accept=".json,.csv,application/json,text/csv" hidden>
+      </section>
+
+      <section id="recordList" class="cards" aria-live="polite"></section>
+      <p id="emptyMsg" class="empty" hidden>등록된 임대차가 없어요.<br>「＋ 임대차 등록」으로 추가하거나, 「↑ 데이터 불러오기」로 기존 파일을 넣으세요.</p>
+    </main>
+  </div>
+
+  <!-- 등록/수정 다이얼로그 -->
+  <dialog id="recordDialog" class="dialog">
+    <div class="dialog-head"><h2 id="dialogTitle">임대차 등록</h2></div>
+    <form id="recordForm">
+      <div class="dialog-body">
+        <div class="form-row">
+          <label class="field">건물
+            <select id="fBuilding">
+              <option value="스마트빌">스마트빌</option>
+              <option value="형제그린빌라">형제그린빌라</option>
+            </select>
+          </label>
+          <label class="field">호실
+            <input id="fRoom" required maxlength="20" placeholder="예: 101">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">입주자명
+            <input id="fTenant" required maxlength="40" placeholder="예: 홍길동">
+          </label>
+          <label class="field">전화번호
+            <input id="fPhone" maxlength="20" inputmode="tel" placeholder="예: 010-1234-5678">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">계약형태
+            <select id="fContractType">
+              <option value="월세">월세</option>
+              <option value="전세">전세</option>
+            </select>
+          </label>
+          <label class="field">납부일 (매월)
+            <input id="fDueDay" type="number" min="1" max="31" value="1">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">보증금 (원)
+            <input id="fDeposit" type="number" min="0" step="10000" value="0" inputmode="numeric">
+          </label>
+          <label class="field">월세 (원)
+            <input id="fRent" type="number" min="0" step="10000" value="0" inputmode="numeric">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">관리비 (원)
+            <input id="fFee" type="number" min="0" step="1000" value="0" inputmode="numeric">
+          </label>
+          <label class="field">계약기간
+            <input id="fPeriod" maxlength="30" placeholder="예: 2년">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">계약일
+            <input id="fStartDate" type="date">
+          </label>
+          <label class="field">만기일
+            <input id="fEndDate" type="date">
+          </label>
+        </div>
+        <label class="field">비고 (메모)
+          <textarea id="fMemo" maxlength="300" placeholder="예: 묵시적 갱신, 퇴실 예정 등"></textarea>
+        </label>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" id="cancelRecordBtn">취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
