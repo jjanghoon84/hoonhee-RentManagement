@@ -32,6 +32,9 @@ function showView(name) {
   $('setupView').hidden = name !== 'setup';
   $('loginView').hidden = name !== 'login';
   $('appView').hidden = name !== 'app';
+  window.__appBooted = true;
+  const be = $('bootError');
+  if (be) be.hidden = true;
 }
 
 let toastTimer = null;

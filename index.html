@@ -22,6 +22,29 @@
 </head>
 <body>
 
+  <!-- 로딩 실패 안내 (JS가 실행되지 않으면 이 화면이 나타남) -->
+  <div id="bootError" class="view" hidden>
+    <main class="wrap narrow">
+      <div class="setup-card">
+        <h1>🏠 임대관리</h1>
+        <p class="sub">화면을 불러오지 못했어요.</p>
+        <ol>
+          <li>인터넷 연결을 확인해 주세요.</li>
+          <li>홈 화면의 임대관리 앱을 삭제한 뒤, 크롬에서 사이트에 다시 접속해 홈 화면에 다시 추가해 주세요.</li>
+        </ol>
+      </div>
+    </main>
+  </div>
+  <script>
+    window.__appBooted = false;
+    setTimeout(function () {
+      if (!window.__appBooted) {
+        var el = document.getElementById('bootError');
+        if (el) el.hidden = false;
+      }
+    }, 15000);
+  </script>
+
   <!-- 설정 안내 화면 (firebase-config.js가 비어 있을 때) -->
   <div id="setupView" class="view" hidden>
     <main class="wrap narrow">
