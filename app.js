@@ -562,11 +562,15 @@ function boot() {
 
     // 대시보드
     let expected = 0, collected = 0;
+    let sumDeposit = 0, sumRent = 0, sumFee = 0;
     const unpaid = [];
     for (const r of inBuilding) {
       const monthly = (Number(r.rent) || 0) + (Number(r.fee) || 0);
       expected += monthly;
       collected += Math.min(paidForMonth(r, key), monthly);
+      sumDeposit += Number(r.deposit) || 0;
+      sumRent += Number(r.rent) || 0;
+      sumFee += Number(r.fee) || 0;
       const due = unpaidForMonth(r, key);
       const st = paymentState(r, key);
       if (st === 'unpaid' || st === 'partial') unpaid.push({ r, due });
@@ -574,6 +578,9 @@ function boot() {
     $('statExpected').textContent = money(expected);
     $('statCollected').textContent = money(collected);
     $('statRate').textContent = expected > 0 ? Math.round((collected / expected) * 100) + '%' : '-';
+    $('sumDeposit').textContent = money(sumDeposit);
+    $('sumRent').textContent = money(sumRent);
+    $('sumFee').textContent = money(sumFee);
     $('unpaidCount').textContent = unpaid.length ? '(' + unpaid.length + '실)' : '';
     $('unpaidList').innerHTML = unpaid.length
       ? unpaid.sort((a, b) => String(a.r.room).localeCompare(String(b.r.room), 'ko'))
