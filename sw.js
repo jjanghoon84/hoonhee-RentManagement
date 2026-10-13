@@ -1,6 +1,7 @@
 // 임대관리 웹앱 - 서비스 워커 (앱 셸 캐시)
+// v3: 2026-10-13 장부식 입금 + 자산관리 탭 배포 (구 캐시 무효화)
 // v2: 네비게이션은 네트워크 우선 + 정상 응답만 캐시 (깨진 캐시 방지)
-const CACHE_NAME = 'rental-app-v2';
+const CACHE_NAME = 'rental-app-v3';
 const APP_SHELL = [
   './',
   './index.html',

@@ -52,6 +52,33 @@ p { margin: 0 0 12px; }
 .topbar h1 { font-size: 22px; margin: 0; }
 .topbar .user-line { margin: 2px 0 0; font-size: 13px; opacity: .85; }
 
+/* ---------- 임대/자산 화면 전환 탭 ---------- */
+.main-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.main-tab {
+  flex: 1;
+  min-height: 56px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.main-tab.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
 /* ---------- 건물 탭 ---------- */
 .building-tabs {
   display: flex;
@@ -205,7 +232,77 @@ p { margin: 0 0 12px; }
 }
 .status-paid { background: var(--green-bg); color: var(--green); }
 .status-unpaid { background: var(--red-bg); color: var(--red); }
+.status-partial { background: var(--amber-bg); color: var(--amber); }
 .status-pending { background: var(--gray-bg); color: var(--muted); }
+.badge.settle-done { background: #dbeafe; color: #1d4ed8; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.muted { color: var(--muted); }
+.btn.sm { min-height: 40px; padding: 8px 12px; font-size: 15px; }
+.btn.danger-ghost { border-color: var(--red); color: var(--red); }
+
+/* ---------- 입금 장부 ---------- */
+.sec-title { font-size: 17px; margin: 18px 0 8px; }
+.pay-groups { display: grid; gap: 10px; margin-bottom: 6px; }
+.empty-sm { text-align: center; color: var(--muted); padding: 20px 8px; font-size: 16px; }
+.month-group {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+}
+.month-group.locked { background: #f9fafb; }
+.month-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.month-group-head strong { font-size: 17px; }
+.ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+.ledger-row .ld-date { color: var(--muted); font-size: 14px; min-width: 44px; }
+.ledger-row .ld-amt { font-weight: 800; min-width: 96px; }
+.ledger-row .ld-memo { flex: 1; color: var(--muted); font-size: 14px; }
+.history { margin-top: 8px; }
+.hist-row {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 6px 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* ---------- 퇴실 정산 ---------- */
+.settle-meta { font-size: 15px; color: var(--muted); margin-bottom: 12px; }
+.settle-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 12px; }
+.settle-table th, .settle-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+.settle-table th { color: var(--muted); font-weight: 600; font-size: 14px; }
+.settle-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+.settle-sum { display: grid; gap: 2px; margin: 12px 0; font-size: 16px; }
+.settle-sum .row { display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid #f3f4f6; }
+.settle-sum .row.total { border-top: 2px solid var(--border); font-size: 18px; font-weight: 800; margin-top: 4px; padding-top: 12px; }
+.warn {
+  background: var(--red-bg);
+  color: var(--red);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 10px 0;
+}
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

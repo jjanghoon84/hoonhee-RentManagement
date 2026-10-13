@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d4ed8">
-  <meta name="description" content="스마트빌·형제그린빌라 임대 관리 웹앱">
+  <meta name="description" content="스마트빌·형제그린빌라 임대·자산 관리 웹앱">
   <title>임대관리</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
@@ -95,6 +95,12 @@
       <button id="logoutBtn" class="btn">로그아웃</button>
     </header>
 
+    <nav class="main-tabs" aria-label="화면 전환">
+      <button class="main-tab active" type="button" data-mainview="rental">🏠 임대관리</button>
+      <button class="main-tab" type="button" data-mainview="asset">💰 자산관리</button>
+    </nav>
+
+    <div id="rentalSection">
     <nav class="building-tabs" aria-label="건물 전환">
       <button class="building-tab active" type="button" data-building="스마트빌">
         <span>스마트빌</span><small id="countSmartville"></small>
@@ -152,6 +158,41 @@
       <section id="recordList" class="cards" aria-live="polite"></section>
       <p id="emptyMsg" class="empty" hidden>등록된 임대차가 없어요.<br>「＋ 임대차 등록」으로 추가하거나, 「↑ 데이터 불러오기」로 기존 파일을 넣으세요.</p>
     </main>
+    </div><!-- /rentalSection -->
+
+    <div id="assetSection" hidden>
+    <main class="wrap">
+      <section class="dashboard" aria-label="자산 현황">
+        <div class="stat"><span class="stat-label">총자산</span><span class="stat-value" id="aTotalAssets">-</span></div>
+        <div class="stat"><span class="stat-label">총부채</span><span class="stat-value red" id="aTotalDebts">-</span></div>
+        <div class="stat"><span class="stat-label">순자산</span><span class="stat-value green" id="aNetWorth">-</span></div>
+      </section>
+
+      <section class="alerts">
+        <div class="alert-card">
+          <h3>📊 분류별 자산</h3>
+          <ul id="assetCategoryList"></ul>
+        </div>
+        <div class="alert-card">
+          <h3>🏦 대출 현황</h3>
+          <ul id="loanSummaryList"></ul>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <button id="addAssetBtn" class="btn primary big" type="button">＋ 자산 등록</button>
+      </section>
+      <section id="assetList" class="cards" aria-live="polite"></section>
+      <p id="assetEmptyMsg" class="empty" hidden>등록된 자산이 없어요.<br>「＋ 자산 등록」으로 부동산·주식·예금 등을 추가해 보세요.</p>
+
+      <section class="toolbar" style="margin-top:18px">
+        <button id="addLoanBtn" class="btn primary big" type="button">＋ 대출 등록</button>
+      </section>
+      <section id="loanList" class="cards" aria-live="polite"></section>
+      <p id="loanEmptyMsg" class="empty" hidden>등록된 대출이 없어요.</p>
+      <p class="hint">대출 잔액·금리는 은행 앱의 숫자를 옮겨 적어 주세요.<br>임대보증금(반환 의무)은 임대관리 탭의 보증금 합계로 자동 표시돼요.</p>
+    </main>
+    </div><!-- /assetSection -->
   </div>
 
   <!-- 등록/수정 다이얼로그 -->
@@ -224,7 +265,127 @@
     </form>
   </dialog>
 
+  <!-- 자산 등록/수정 다이얼로그 -->
+  <dialog id="assetDialog" class="dialog">
+    <div class="dialog-head"><h2 id="assetDialogTitle">자산 등록</h2></div>
+    <form id="assetForm">
+      <div class="dialog-body">
+        <div class="form-row">
+          <label class="field">자산명
+            <input id="aName" required maxlength="40" placeholder="예: 스마트빌, 삼성전자">
+          </label>
+          <label class="field">분류
+            <select id="aCategory">
+              <option value="부동산">부동산</option>
+              <option value="주식">주식</option>
+              <option value="예금">예금</option>
+              <option value="현금">현금</option>
+              <option value="기타">기타</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">금액 (원)
+            <input id="aAmount" type="number" min="0" step="10000" inputmode="numeric" placeholder="예: 500000000">
+          </label>
+          <label class="field">소유자
+            <select id="aOwner">
+              <option value="공동">공동</option>
+              <option value="본인">본인</option>
+              <option value="아내">아내</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">기준일
+          <input id="aBaseDate" type="date">
+        </label>
+        <label class="field">메모
+          <textarea id="aMemo" maxlength="300" placeholder="예: KB시세 기준"></textarea>
+        </label>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" id="cancelAssetBtn">취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 대출 등록/수정 다이얼로그 -->
+  <dialog id="loanDialog" class="dialog">
+    <div class="dialog-head"><h2 id="loanDialogTitle">대출 등록</h2></div>
+    <form id="loanForm">
+      <div class="dialog-body">
+        <div class="form-row">
+          <label class="field">대출명
+            <input id="lName" required maxlength="40" placeholder="예: 스마트빌 주담대">
+          </label>
+          <label class="field">금융기관
+            <input id="lLender" maxlength="40" placeholder="예: 국민은행">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">잔액 (원)
+            <input id="lBalance" type="number" min="0" step="10000" inputmode="numeric" placeholder="예: 200000000">
+          </label>
+          <label class="field">금리 (연 %)
+            <input id="lRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="예: 4.66">
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">월상환액 (원)
+            <input id="lMonthly" type="number" min="0" step="1000" inputmode="numeric">
+          </label>
+          <label class="field">만기일
+            <input id="lEndDate" type="date">
+          </label>
+        </div>
+        <label class="field">메모
+          <textarea id="lMemo" maxlength="300"></textarea>
+        </label>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" id="cancelLoanBtn">취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- 입금 장부 다이얼로그 -->
+  <dialog id="payDialog" class="dialog">
+    <div class="dialog-head"><h2 id="payDialogTitle">입금 내역</h2></div>
+    <div class="dialog-body">
+      <div id="payMonthGroups" class="pay-groups"></div>
+      <h3 class="sec-title">입금 기록하기</h3>
+      <div class="form-row">
+        <label class="field">입금일
+          <input id="pDate" type="date">
+        </label>
+        <label class="field">금액 (원)
+          <input id="pAmount" type="number" min="0" step="1000" inputmode="numeric" placeholder="예: 550000">
+        </label>
+      </div>
+      <label class="field">메모
+        <input id="pMemo" maxlength="100" placeholder="예: 계좌이체, 현금">
+      </label>
+      <div id="payHistory" class="history"></div>
+    </div>
+    <div class="dialog-foot">
+      <button type="button" class="btn" id="payCloseBtn">닫기</button>
+      <button type="button" class="btn primary" id="payAddBtn">입금 기록</button>
+    </div>
+  </dialog>
+
+  <!-- 퇴실 정산 다이얼로그 -->
+  <dialog id="settleDialog" class="dialog">
+    <div class="dialog-head"><h2 id="settleTitle">퇴실 정산</h2></div>
+    <div class="dialog-body" id="settleBody"></div>
+    <div class="dialog-foot">
+      <button type="button" class="btn" id="settleCloseBtn">닫기</button>
+      <button type="button" class="btn primary" id="settleConfirmBtn">정산 확정</button>
+    </div>
+  </dialog>
 
   <script type="module" src="app.js"></script>
 </body>
