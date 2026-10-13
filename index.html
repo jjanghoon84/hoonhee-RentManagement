@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d4ed8">
   <meta name="description" content="스마트빌·형제그린빌라 임대·자산 관리 웹앱">
-  <title>임대관리</title>
+  <title>훈희-자산관리</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -26,7 +26,7 @@
   <div id="bootError" class="view" hidden>
     <main class="wrap narrow">
       <div class="setup-card">
-        <h1>🏠 임대관리</h1>
+        <h1>🏠 훈희-자산관리</h1>
         <p class="sub">화면을 불러오지 못했어요.</p>
         <ol>
           <li>인터넷 연결을 확인해 주세요.</li>
@@ -49,7 +49,7 @@
   <div id="setupView" class="view" hidden>
     <main class="wrap narrow">
       <div class="setup-card">
-        <h1>🏠 임대관리</h1>
+        <h1>🏠 훈희-자산관리</h1>
         <p class="sub">아직 Firebase 연결 설정이 되어 있지 않아요.<br>아래 순서대로 설정해 주세요.</p>
         <ol>
           <li><a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase 콘솔</a>에서 새 프로젝트를 만드세요. (무료 Spark 요금제로 충분해요)</li>
@@ -68,7 +68,7 @@
   <div id="loginView" class="view" hidden>
     <main class="wrap narrow">
       <div class="login-card">
-        <h1>🏠 임대관리</h1>
+        <h1>🏠 훈희-자산관리</h1>
         <p class="sub">스마트빌 · 형제그린빌라</p>
         <form id="loginForm">
           <label class="field">이메일
@@ -101,6 +101,8 @@
     </nav>
 
     <div id="rentalSection">
+    <div class="building-box">
+    <p class="building-box-label">🏠 건물 선택</p>
     <nav class="building-tabs" aria-label="건물 전환">
       <button class="building-tab active" type="button" data-building="스마트빌">
         <span>스마트빌</span><small id="countSmartville"></small>
@@ -109,6 +111,7 @@
         <span>형제그린빌라</span><small id="countVilla"></small>
       </button>
     </nav>
+    </div>
 
     <main class="wrap">
       <section class="monthbar" aria-label="월 이동">

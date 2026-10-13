@@ -61,8 +61,8 @@ p { margin: 0 0 12px; }
 }
 .main-tab {
   flex: 1;
-  min-height: 54px;
-  font-size: 18px;
+  min-height: 58px;
+  font-size: 20px;
   font-weight: 800;
   font-family: inherit;
   border: 2px solid var(--primary);
@@ -78,18 +78,32 @@ p { margin: 0 0 12px; }
   color: #fff;
 }
 
-/* ---------- 건물 탭 (하위: 외곽선 스타일) ---------- */
+/* ---------- 건물 탭 (하위: 외곽선 스타일, 박스로 묶음) ---------- */
+.building-box {
+  max-width: 960px;
+  margin: 12px auto 0;
+  padding: 10px 12px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.building-box-label {
+  margin: 0 0 8px 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
 .building-tabs {
   display: flex;
   gap: 8px;
-  padding: 12px 16px 0;
-  max-width: 960px;
-  margin: 0 auto;
+  padding: 0;
+  margin: 0;
 }
 .building-tab {
   flex: 1;
-  min-height: 52px;
-  font-size: 17px;
+  min-height: 50px;
+  font-size: 15px;
   font-weight: 700;
   border: 2px solid var(--border);
   border-radius: var(--radius);
