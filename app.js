@@ -184,6 +184,21 @@ function normalizeLoan(raw) {
   };
 }
 
+// ---------- 고정지출 데이터 정규화 ----------
+const EXPENSE_CATEGORIES = ['주거비', '교육비', '공과금', '통신비', '보험료', '차량유지비', '기타'];
+
+function normalizeExpense(raw) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const cat = String(raw.category || '기타');
+  return {
+    name: String(raw.name || '').slice(0, 40),
+    category: EXPENSE_CATEGORIES.includes(cat) ? cat : '기타',
+    amount: Math.max(0, Number(raw.amount) || 0),
+    day: Math.min(31, Math.max(1, Number(raw.day) || 1)),
+    memo: String(raw.memo || '').slice(0, 300),
+  };
+}
+
 // ---------- 입금 장부 ----------
 // 구 payments('paid' 토글)는 장부에 수기 항목이 없는 달에만 이관 항목으로 계산 (중복 방지)
 function getLedger(rec) {
@@ -347,12 +362,14 @@ function boot() {
   const recordsCol = collection(db, 'records');
   const assetsCol = collection(db, 'assets');
   const loansCol = collection(db, 'loans');
+  const expensesCol = collection(db, 'expenses');
 
   const state = {
     user: null,
     records: [],          // {id, ...fields}
     assets: [],           // {id, ...assetFields}
     loans: [],            // {id, ...loanFields}
+    expenses: [],         // {id, ...expenseFields}
     mainView: 'rental',   // 'rental' | 'asset'
     building: '스마트빌',
     viewDate: firstOfMonth(new Date()),
@@ -361,9 +378,11 @@ function boot() {
     editingId: null,
     editingAssetId: null,
     editingLoanId: null,
+    editingExpenseId: null,
     unsubscribe: null,
     unsubAssets: null,
     unsubLoans: null,
+    unsubExpenses: null,
   };
 
   // ---------- 로그인 ----------
@@ -396,13 +415,16 @@ function boot() {
       subscribeRecords();
       subscribeAssets();
       subscribeLoans();
+      subscribeExpenses();
     } else {
       if (state.unsubscribe) { state.unsubscribe(); state.unsubscribe = null; }
       if (state.unsubAssets) { state.unsubAssets(); state.unsubAssets = null; }
       if (state.unsubLoans) { state.unsubLoans(); state.unsubLoans = null; }
+      if (state.unsubExpenses) { state.unsubExpenses(); state.unsubExpenses = null; }
       state.records = [];
       state.assets = [];
       state.loans = [];
+      state.expenses = [];
       $('password').value = '';
       showView('login');
     }
@@ -434,6 +456,16 @@ function boot() {
     state.unsubLoans = onSnapshot(loansCol,
       (snap) => {
         state.loans = snap.docs.map((d) => ({ id: d.id, ...normalizeLoan(d.data()) }));
+        render();
+      },
+      (err) => { toast(friendlyDbError(err)); });
+  }
+
+  function subscribeExpenses() {
+    if (state.unsubExpenses) state.unsubExpenses();
+    state.unsubExpenses = onSnapshot(expensesCol,
+      (snap) => {
+        state.expenses = snap.docs.map((d) => ({ id: d.id, ...normalizeExpense(d.data()) }));
         render();
       },
       (err) => { toast(friendlyDbError(err)); });
@@ -1080,6 +1112,16 @@ function boot() {
       ? loanRows.join('')
       : '<li class="none">등록된 대출이 없어요.</li>';
 
+    // 고정지출 요약
+    const expenseTotal = state.expenses.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+    const expenseRows = state.expenses
+      .slice().sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0))
+      .map((x) => '<li>' + esc(x.name) + ' (' + esc(x.category) + ')' +
+        ' · 월 ' + money(x.amount) + ' · 매월 ' + esc(x.day) + '일</li>');
+    $('expenseSummaryList').innerHTML =
+      (expenseTotal > 0 ? '<li><strong>월 합계 ' + money(expenseTotal) + '</strong></li>' : '') +
+      (expenseRows.length ? expenseRows.join('') : '<li class="none">등록된 지출이 없어요.</li>');
+
     // 자산 목록 (금액 큰 순)
     const assets = state.assets.slice().sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
     $('assetList').innerHTML = assets.map((a) =>
@@ -1116,6 +1158,22 @@ function boot() {
         '</div>' +
       '</article>').join('');
     $('loanEmptyMsg').hidden = loans.length > 0;
+
+    // 고정지출 목록 (금액 큰 순)
+    const expenses = state.expenses.slice().sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
+    $('expenseList').innerHTML = expenses.map((x) =>
+      '<article class="card">' +
+        '<div class="card-head"><div><span class="card-room">' + esc(x.name) + '</span> ' +
+        '<span class="badge">' + esc(x.category) + '</span></div>' +
+        '<span class="stat-value red">월 ' + money(x.amount) + '</span></div>' +
+        '<div class="card-dates">매월 ' + esc(x.day) + '일 지출</div>' +
+        (x.memo ? '<div class="card-memo">📝 ' + esc(x.memo) + '</div>' : '') +
+        '<div class="card-actions">' +
+          '<button class="btn" type="button" data-eaction="edit" data-id="' + x.id + '">수정</button>' +
+          '<button class="btn" type="button" data-eaction="delete" data-id="' + x.id + '">삭제</button>' +
+        '</div>' +
+      '</article>').join('');
+    $('expenseEmptyMsg').hidden = expenses.length > 0;
   }
 
   // ---------- 자산 목록 버튼 ----------
@@ -1233,6 +1291,63 @@ function boot() {
         toast('등록했어요.');
       }
       loanDialog.close();
+    } catch (err) { toast(friendlyDbError(err)); }
+  });
+
+  // ---------- 고정지출 목록 버튼 ----------
+  $('expenseList').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-eaction]');
+    if (!btn) return;
+    const x = state.expenses.find((v) => v.id === btn.dataset.id);
+    if (!x) return;
+    if (btn.dataset.eaction === 'edit') {
+      openExpenseDialog(x);
+    } else if (btn.dataset.eaction === 'delete') {
+      if (!window.confirm('"' + x.name + '" 지출을 삭제할까요?\n삭제하면 되돌릴 수 없어요.')) return;
+      try {
+        await deleteDoc(doc(db, 'expenses', x.id));
+        toast('삭제했어요.');
+      } catch (err) { toast(friendlyDbError(err)); }
+    }
+  });
+
+  // ---------- 고정지출 등록/수정 다이얼로그 ----------
+  const expenseDialog = $('expenseDialog');
+
+  function openExpenseDialog(x) {
+    state.editingExpenseId = x ? x.id : null;
+    $('expenseDialogTitle').textContent = x ? '지출 수정' : '지출 등록';
+    $('eName').value = x ? x.name : '';
+    $('eCategory').value = x ? x.category : '주거비';
+    $('eAmount').value = x ? x.amount : '';
+    $('eDay').value = x ? x.day : 1;
+    $('eMemo').value = x ? x.memo : '';
+    expenseDialog.showModal();
+  }
+
+  $('addExpenseBtn').addEventListener('click', () => openExpenseDialog(null));
+  $('cancelExpenseBtn').addEventListener('click', () => expenseDialog.close());
+
+  $('expenseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = normalizeExpense({
+      name: $('eName').value.trim(),
+      category: $('eCategory').value,
+      amount: $('eAmount').value,
+      day: $('eDay').value,
+      memo: $('eMemo').value.trim(),
+    });
+    if (!data.name) { toast('항목명을 입력해 주세요.'); return; }
+    if (!data.amount) { toast('월 금액을 입력해 주세요.'); return; }
+    try {
+      if (state.editingExpenseId) {
+        await updateDoc(doc(db, 'expenses', state.editingExpenseId), data);
+        toast('수정했어요.');
+      } else {
+        await addDoc(expensesCol, data);
+        toast('등록했어요.');
+      }
+      expenseDialog.close();
     } catch (err) { toast(friendlyDbError(err)); }
   });
 }

@@ -186,6 +186,10 @@
           <h3>🏦 대출 현황</h3>
           <ul id="loanSummaryList"></ul>
         </div>
+        <div class="alert-card">
+          <h3>💸 지출 현황</h3>
+          <ul id="expenseSummaryList"></ul>
+        </div>
       </section>
 
       <section class="toolbar">
@@ -200,6 +204,12 @@
       <section id="loanList" class="cards" aria-live="polite"></section>
       <p id="loanEmptyMsg" class="empty" hidden>등록된 대출이 없어요.</p>
       <p class="hint">대출 잔액·금리는 은행 앱의 숫자를 옮겨 적어 주세요.<br>임대보증금(반환 의무)은 임대관리 탭의 보증금 합계로 자동 표시돼요.</p>
+
+      <section class="toolbar" style="margin-top:18px">
+        <button id="addExpenseBtn" class="btn primary big" type="button">＋ 지출 등록</button>
+      </section>
+      <section id="expenseList" class="cards" aria-live="polite"></section>
+      <p id="expenseEmptyMsg" class="empty" hidden>등록된 지출이 없어요.<br>매달 나가는 비용이나 가끔 나가는 큰 지출을 등록해 보세요.</p>
     </main>
     </div><!-- /assetSection -->
   </div>
@@ -354,6 +364,46 @@
       </div>
       <div class="dialog-foot">
         <button type="button" class="btn" id="cancelLoanBtn">취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 고정지출 등록/수정 다이얼로그 -->
+  <dialog id="expenseDialog" class="dialog">
+    <div class="dialog-head"><h2 id="expenseDialogTitle">지출 등록</h2></div>
+    <form id="expenseForm">
+      <div class="dialog-body">
+        <div class="form-row">
+          <label class="field">항목명
+            <input id="eName" required maxlength="40" placeholder="예: 아이 학원비">
+          </label>
+          <label class="field">분류
+            <select id="eCategory">
+              <option value="주거비">주거비</option>
+              <option value="교육비">교육비</option>
+              <option value="공과금">공과금</option>
+              <option value="통신비">통신비</option>
+              <option value="보험료">보험료</option>
+              <option value="차량유지비">차량유지비</option>
+              <option value="기타">기타</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label class="field">월 금액 (원)
+            <input id="eAmount" type="number" min="0" step="1000" inputmode="numeric" placeholder="예: 300000">
+          </label>
+          <label class="field">지출일 (매월)
+            <input id="eDay" type="number" min="1" max="31" value="1">
+          </label>
+        </div>
+        <label class="field">메모
+          <textarea id="eMemo" maxlength="300"></textarea>
+        </label>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" id="cancelExpenseBtn">취소</button>
         <button type="submit" class="btn primary">저장</button>
       </div>
     </form>
