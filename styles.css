@@ -52,34 +52,33 @@ p { margin: 0 0 12px; }
 .topbar h1 { font-size: 22px; margin: 0; }
 .topbar .user-line { margin: 2px 0 0; font-size: 13px; opacity: .85; }
 
-/* ---------- 임대/자산 화면 전환 탭 ---------- */
+/* ---------- 임대/자산 화면 전환 탭 (상위: 세그먼트 컨트롤) ---------- */
 .main-tabs {
   display: flex;
-  gap: 8px;
   padding: 12px 16px 0;
   max-width: 960px;
   margin: 0 auto;
 }
 .main-tab {
   flex: 1;
-  min-height: 56px;
+  min-height: 54px;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   font-family: inherit;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  border: 2px solid var(--primary);
   background: #fff;
-  color: var(--text);
+  color: var(--primary-dark);
   cursor: pointer;
   touch-action: manipulation;
 }
+.main-tab:first-child { border-radius: 14px 0 0 14px; border-right-width: 1px; }
+.main-tab:last-child { border-radius: 0 14px 14px 0; border-left-width: 1px; }
 .main-tab.active {
-  border-color: var(--primary);
   background: var(--primary);
   color: #fff;
 }
 
-/* ---------- 건물 탭 ---------- */
+/* ---------- 건물 탭 (하위: 외곽선 스타일) ---------- */
 .building-tabs {
   display: flex;
   gap: 8px;
@@ -89,8 +88,8 @@ p { margin: 0 0 12px; }
 }
 .building-tab {
   flex: 1;
-  min-height: 60px;
-  font-size: 19px;
+  min-height: 52px;
+  font-size: 17px;
   font-weight: 700;
   border: 2px solid var(--border);
   border-radius: var(--radius);
